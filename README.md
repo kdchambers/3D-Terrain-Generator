@@ -39,6 +39,13 @@ As for the plants that occupy the world, I will probably use L-Systems to genera
 
 At the end of all this, we should have a reasonable varied world that the user can then explore and inspect!
 
+**Inspirations**
+
+[https://www.youtube.com/watch?v=HAIDqt2aUek](https://www.youtube.com/watch?v=HAIDqt2aUek "Porter Robinson - Sad Machine")
+
+[https://www.youtube.com/watch?v=D1sZ_vwqwcE](https://www.youtube.com/watch?v=D1sZ_vwqwcE "Porter Robinson - Flicker")
+
+
 **References**
 
 Smelik, Ruben M., et al. "A survey of procedural methods for terrain modelling." Proceedings of the CASA Workshop on 3D Advanced Media In Gaming And Simulation (3AMIGAS). 2009.
