@@ -2,7 +2,7 @@
 
 ## 3D terrain generator
 
-For my project I want to develop a procedurally generated 3d dimentional terrain, as I have always been facinated by their unmatched beauty in games such as Minecraft, and Civilization.
+For my project I want to develop a procedurally generated 3D  terrain, as I have always been facinated by their unmatched beauty in games such as Minecraft and Civilization.
 
 ### Overview
 
@@ -12,12 +12,19 @@ Apart from the basic components of a terrain, such as seas and mountains I hope 
 
 Things like grass, mountains and sea will all be textured appropriatly to provide greater detail and realism. 
 
+Lastly, for the purposes of making the project a little more interesting and visual, I'm going to take in an mp3 file and use it in the following ways:
+
+- Set procedural content generating parameters based on properties of the audio file
+- Make visuals in the sky that reflect the audio
+- Play the audio as the player moves around the world!
+
 This will be my target for the project, however if time allows there are many more interesting things that could take the world to a new level, such as:
 
 - Generating animals with ai for movements
 - Spawning weather
 - Generating simple settlements
 - Applying different art styles (Low poly, etc)
+
 
 ### Implementation thoughts
 
