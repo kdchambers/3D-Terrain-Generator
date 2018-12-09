@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class TerrainType {
 
-	public TerrainType(Color color, float cutoff)
+	public TerrainType(Color32[] colors, float cutoff)
 	{
-		terrainColor = color;
+		terrainColors = colors;
 		heightCutoff = cutoff;
 	}
 
-	public Color terrainColor;
+	public Color32[] terrainColors;
 	public float heightCutoff;
 }

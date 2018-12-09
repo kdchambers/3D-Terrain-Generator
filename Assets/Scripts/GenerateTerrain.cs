@@ -38,11 +38,31 @@ public class GenerateTerrain : MonoBehaviour{
 
 		terrains = new TerrainType[5];
 
-		terrains[0] = new TerrainType(Color.blue, 0.3f);
-		terrains[1] = new TerrainType(Color.yellow, 0.4f);
-		terrains[2] = new TerrainType(Color.green, 0.75f);
-		terrains[3] = new TerrainType(Color.grey, 0.9f);
-		terrains[4] = new TerrainType(Color.white, 1.0f);
+		Color32[] seaColors = new Color32[1];
+		seaColors[0] = new Color32(10, 50, 255, 255);
+
+		Color32[] beachColors = new Color32[2];
+		beachColors[0] = new Color32(255, 255, 0, 255);
+		beachColors[0] = new Color32(255, 255, 51, 255);
+
+		Color32[] landColors = new Color32[4];
+		landColors[0] = new Color32(5, 128, 50, 255);
+		landColors[0] = new Color32(15, 74, 29, 255);
+		landColors[0] = new Color32(11, 150, 87, 255);
+		landColors[0] = new Color32(22, 102, 17, 255);
+
+		Color32[] mountainColors = new Color32[2];
+		mountainColors[0] = new Color32(103, 110, 93, 255);
+		mountainColors[0] = new Color32(79, 87, 71, 255);
+
+		Color32[] mountainCapColors = new Color32[1];
+		mountainColors[0] = new Color32(207, 207, 207, 255);
+
+		terrains[0] = new TerrainType(seaColors, 0.3f);
+		terrains[1] = new TerrainType(beachColors, 0.4f);
+		terrains[2] = new TerrainType(landColors, 0.75f);
+		terrains[3] = new TerrainType(mountainColors, 0.9f);
+		terrains[4] = new TerrainType(mountainCapColors, 1.0f);
 	}
 
 	public static Texture2D Generate2DTextureForTerrains(float[,] noiseMap, TerrainType[] terrainArr)
@@ -54,6 +74,8 @@ public class GenerateTerrain : MonoBehaviour{
 		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
 		Color[] colorMap = new Color[mapWidth * mapHeight];
 
+		System.Random random = new System.Random (1332);
+
 		/* Generate color pixels */
 		for(int x = 0; x < mapWidth; x++)
 		{
@@ -63,7 +85,9 @@ public class GenerateTerrain : MonoBehaviour{
 				{
 					if(noiseMap[x,y] <= terrainArr[i].heightCutoff)
 					{
-						colorMap[y * mapWidth + x] = terrainArr[i].terrainColor;
+						// (x*mapWidth+x/3) % terrainArr[i].terrainColors.Length
+						Color32 currColor = (terrainArr[i].terrainColors.Length == 1) ? terrainArr[i].terrainColors[0] : terrainArr[i].terrainColors[random.Next(-1000, 1000) % (terrainArr[i].terrainColors.Length - 1)];
+						colorMap[y * mapWidth + x] = currColor;
 						break;
 					}
 				}
