@@ -5,7 +5,7 @@ using System.Linq;
 
 public class GenerateTerrain : MonoBehaviour{
 
-	[Range(1,15)]
+	[Range(1,100)]
 	public int mapSizeSetting = 1;
 	public int seed = 1;
 	[Range(1,10)]
@@ -98,7 +98,7 @@ public class GenerateTerrain : MonoBehaviour{
 		noiseGenerator.persistance = persistance;
 		noiseGenerator.lacunarity = lacunarity;
 
-		transform.localScale = new Vector3(mapSize, 1, mapSize);
+		transform.localScale = new Vector3(5, 1, 5);
 
 		Debug.Log("Drawing map");
 
