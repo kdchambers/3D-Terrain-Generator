@@ -4,16 +4,16 @@ using UnityEngine;
 
 public class GenerateTerrain : MonoBehaviour{
 
-	[Range(1,5)]
+	[Range(1,15)]
 	public int mapSizeSetting = 1;
 	public int seed = 1;
 	[Range(1,10)]
 	public float scale = 1f;
 	[Range(0,10)]
 	public int numOctaves = 2;
-	[Range(0,1)]
-	public float persistance = 0.5f;
 	[Range(0,10)]
+	public float persistance = 0.5f;
+	[Range(0,2)]
 	public float lacunarity = 0.5f;
 	public bool renderMesh = false;
 
@@ -40,7 +40,7 @@ public class GenerateTerrain : MonoBehaviour{
 
 	public void drawMap()
 	{
-		mapSize = mapSizeSetting * 2 + 1 + 10;
+		mapSize = mapSizeSetting * 5;
 
 		noiseGenerator.arrWidth = mapSize;
 		noiseGenerator.arrHeight = mapSize;
@@ -61,9 +61,10 @@ public class GenerateTerrain : MonoBehaviour{
 		if(renderMesh)
 		{
 			/* Reset mesh texture */
-			planeTextureRenderer.material.mainTexture = planeTextureRenderer.sharedMaterial.mainTexture;
-			TestGenerateMeshFromNoiseMap(noiseArray, 10);
-			GetComponent<MeshRenderer>().material.mainTexture = texture;
+			planeTextureRenderer.material.mainTexture = null;
+			GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
+			TestGenerateMeshFromNoiseMap2(noiseArray, 200);
+			Debug.Log("Mesh Rendered");
 		}else
 		{
 			planeTextureRenderer.material.mainTexture = texture;
@@ -85,6 +86,65 @@ public class GenerateTerrain : MonoBehaviour{
 		
 	}
 
+	public void TestGenerateMeshFromNoiseMap2(float[,] noiseMap, float maxHeight)
+	{
+		int mapSize = noiseMap.GetLength(0);
+
+		Vector3[] vertices = new Vector3[mapSize * mapSize];
+		int[] triangles = new int[(mapSize - 1)*(mapSize - 1) * 6];
+		Vector2[] uvs = new Vector2[mapSize * mapSize];
+
+		Mesh mesh = new Mesh();
+		Vector3[] normals = new Vector3[mapSize * mapSize];
+
+		for(int x = 0; x < mapSize; x++)
+		{
+			for(int y = 0; y < mapSize; y++)
+			{
+				vertices[x * mapSize + y].x = x - 5;
+				vertices[x * mapSize + y].y = 1 + noiseMap[x,y] * maxHeight;
+				vertices[x * mapSize + y].z = y - 5;
+
+				normals[x * mapSize + y].x = 0;
+				normals[x * mapSize + y].y = 1;
+				normals[x * mapSize + y].z = 0;
+			}
+		}
+
+		int triangleIndex = 0;
+		for(int y = 0; y < mapSize; y++)
+		{
+			for(int x = 0; x < mapSize; x++)
+			{
+				if (x < (mapSize - 1) && y < (mapSize - 1))
+				{
+					triangles[triangleIndex] = x + (y * mapSize);							// Top left
+					triangles[triangleIndex + 1] = x + mapSize + (y * mapSize);				// Bottom left
+					triangles[triangleIndex + 2] = x + mapSize + 1 + (y * mapSize);			// Bottom Right
+
+					triangles[triangleIndex + 3] = x + (y * mapSize);						// Top left
+					triangles[triangleIndex + 4] = x + mapSize + 1 + (y * mapSize);			// Bottom Right
+					triangles[triangleIndex + 5] = x + 1 + (y * mapSize);					// Top Right
+
+					triangleIndex += 6;
+				}
+
+				uvs[x * mapSize + y].x = x / (float)mapSize;
+				uvs[x * mapSize + y].y = y / (float)mapSize;
+			}
+		}
+
+		mesh.vertices = vertices;
+		mesh.triangles = triangles;
+		mesh.uv = uvs;
+		mesh.normals = normals;
+
+		GetComponent<MeshFilter>().mesh = mesh;
+
+		Debug.Log("Normals array size : " + mesh.normals.Length);
+
+	}
+
 	public void TestGenerateMeshFromNoiseMap(float[,] noiseMap, float maxHeight)
 	{
 		int noiseArrWidth = noiseMap.GetLength(0);
@@ -95,9 +155,9 @@ public class GenerateTerrain : MonoBehaviour{
 
 		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
 
-		Vector3[] vertices = new Vector3[noiseArrWidth * noiseArrHeight];
+		Vector3[] vertices = new Vector3[(noiseArrWidth + 1) * (noiseArrHeight + 1)];
 		int[] triangles = new int[(noiseArrHeight - 1) * (noiseArrWidth - 1) * 6];
-		Vector2[] uvs = new Vector2[noiseArrWidth * noiseArrHeight];
+		Vector2[] uvs = new Vector2[(noiseArrWidth + 1) * (noiseArrHeight + 1)];
 
 		/* Generate vertices */
 		for(int x = 0; x < noiseArrWidth; x++)
