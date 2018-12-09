@@ -20,15 +20,12 @@ public class GenerateTerrain : MonoBehaviour{
 	public bool useTerrainColors = false;
 	[Range(25,500)]
 	public int maxMapHeight = 200;
+	public bool enableWaterCutoff = false;
+	public Renderer planeTextureRenderer;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 11;
-	public Renderer planeTextureRenderer;
 	private TerrainType[] terrains; 
-	// public MeshRenderer planeMeshRenderer;
-
-	private static bool flipped = false;
-	public bool enableWaterCutoff = false;
 
 	public PerlinNoise getNoiseGenerator()
 	{
@@ -89,11 +86,6 @@ public class GenerateTerrain : MonoBehaviour{
 
 	public void drawMap()
 	{
-		if(flipped == false)
-		{
-			// GetComponent<Plane>().Flip();
-			flipped = true;
-		}
 
 		mapSize = mapSizeSetting * 5;
 
@@ -127,17 +119,16 @@ public class GenerateTerrain : MonoBehaviour{
 			/* Reset mesh texture */
 			planeTextureRenderer.material.mainTexture = null;
 			GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
-			TestGenerateMeshFromNoiseMap2(noiseArray, maxMapHeight);
+			GenerateMeshFromNoiseMap(noiseArray, maxMapHeight);
 			Debug.Log("Mesh Rendered");
 		}else
 		{
-			// GetComponent<MeshFilter>().mesh.Clear();
 			planeTextureRenderer.material.mainTexture = texture;
 		}
 		
 	}
 
-	public void TestGenerateMeshFromNoiseMap2(float[,] noiseMap, float maxHeight)
+	public void GenerateMeshFromNoiseMap(float[,] noiseMap, float maxHeight)
 	{
 		int mapSize = noiseMap.GetLength(0);
 
@@ -209,9 +200,6 @@ public class GenerateTerrain : MonoBehaviour{
 		int mapWidth = noiseMap.GetLength(0);
 		int mapHeight = noiseMap.GetLength(1);
 
-		Debug.Log("Height: " + mapHeight);
-		Debug.Log("Width: " + mapWidth);
-
 		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
 		Color[] colorMap = new Color[mapWidth * mapHeight];
 
@@ -230,44 +218,5 @@ public class GenerateTerrain : MonoBehaviour{
 		resultTexture.Apply();
 
 		return resultTexture;
-	}
-
-	public static float[,] GenerateNoiseArray(int width, int height)
-	{
-		/* Validate input */
-		if(height < 1)
-			height = 1;
-		if(width < 1)
-			width = 1;
-
-		float offset = 1000.0f;
-		float scale = 1.5f; 
-		int octaves = 1;
-		float persistance = 1.5f;
-		float frequency = 1.0f; 
-		float amplitude = 1.5f;
-		float lacunarity = 1.0f;
-
-		int counter = 0;
-
-		float[,] resultNoiseArray = new float[width, height];
-
-		float noiseResult;
-		for(int x = 0; x < width; x++)
-		{
-			for(int y = 0; y < height; y++)
-			{
-				noiseResult = 0;
-				for(int o = 0; o < octaves; o++)
-				{
-					noiseResult += Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
-				}
-				/* Ensure result is normalised */
-				noiseResult = Mathf.PerlinNoise(x * 0.1f, y * 0.1f);
-				resultNoiseArray[x,y] = (noiseResult > 1.0f) ? 1.0f : noiseResult; 
-			}
-		}
-
-		return resultNoiseArray;
 	}
 }
