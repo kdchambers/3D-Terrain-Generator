@@ -62,7 +62,7 @@ public class GenerateTerrain : MonoBehaviour{
 		{
 			for(int y = 0; y < mapHeight; y++)
 			{
-				for(int i = 0; i < numTerrains - 1; i++)
+				for(int i = 0; i < numTerrains; i++)
 				{
 					if(noiseMap[x,y] <= terrainArr[i].heightCutoff)
 					{
