@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TerrainType {
 
-	TerrainType(Color color, float heightFrom)
+	public TerrainType(Color color, float heightFrom)
 	{
 		terrainColor = color;
 		heightFromNormalised = heightFrom;

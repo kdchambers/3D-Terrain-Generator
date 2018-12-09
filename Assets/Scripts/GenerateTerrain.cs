@@ -16,10 +16,12 @@ public class GenerateTerrain : MonoBehaviour{
 	[Range(0,2)]
 	public float lacunarity = 0.5f;
 	public bool renderMesh = false;
+	public bool useTerrainColors = false;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 11;
 	public Renderer planeTextureRenderer;
+	private TerrainType[] terrains; 
 	// public MeshRenderer planeMeshRenderer;
 
 	public PerlinNoise getNoiseGenerator()
@@ -30,6 +32,46 @@ public class GenerateTerrain : MonoBehaviour{
 	GenerateTerrain()
 	{
 		noiseGenerator = new PerlinNoise();
+
+		terrains = new TerrainType[5];
+
+		terrains[0] = new TerrainType(Color.blue, 0.0f);
+		terrains[1] = new TerrainType(Color.yellow, 0.3f);
+		terrains[2] = new TerrainType(Color.green, 0.4f);
+		terrains[3] = new TerrainType(Color.grey, 0.6f);
+		terrains[4] = new TerrainType(Color.white, 0.85f);
+	}
+
+	public static Texture2D Generate2DTextureForTerrains(float[,] noiseMap, TerrainType[] terrainArr)
+	{
+		int mapWidth = noiseMap.GetLength(0);
+		int mapHeight = noiseMap.GetLength(1);
+		int numTerrains = terrainArr.Length;
+
+		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
+		Color[] colorMap = new Color[mapWidth * mapHeight];
+
+		/* Generate color pixels */
+		for(int x = 0; x < mapWidth; x++)
+		{
+			for(int y = 0; y < mapHeight; y++)
+			{
+				for(int i = 0; i < numTerrains - 1; i++)
+				{
+					if(noiseMap[x,y] >= terrainArr[i].heightFromNormalised && noiseMap[x,y] < terrainArr[i + 1].heightFromNormalised)
+					{
+						colorMap[x * mapWidth + y] = terrainArr[i].terrainColor;
+					}
+				}
+			}
+		}
+
+		resultTexture.filterMode = FilterMode.Point;
+		resultTexture.wrapMode = TextureWrapMode.Clamp;
+		resultTexture.SetPixels(colorMap);
+		resultTexture.Apply();
+
+		return resultTexture;
 	}
 
 	public void Start()
@@ -56,7 +98,16 @@ public class GenerateTerrain : MonoBehaviour{
 		Debug.Log("Drawing map");
 
 		float[,] noiseArray = noiseGenerator.GenerateNoiseArr();
-		Texture2D texture = Texture2DFromNoiseMap(noiseArray);
+
+		Texture2D texture;
+
+		if(useTerrainColors)
+		{
+			texture = Generate2DTextureForTerrains(noiseArray, terrains);
+		}else
+		{
+			texture = Texture2DFromNoiseMap(noiseArray);
+		}
 
 		if(renderMesh)
 		{
@@ -69,20 +120,6 @@ public class GenerateTerrain : MonoBehaviour{
 		{
 			planeTextureRenderer.material.mainTexture = texture;
 		}
-
-		// Generate a noise map
-		
-		
-		
-
-		//TestGenerateMeshFromNoiseMap(noiseArray, 10);
-
-		//
-
-		//Texture2D texture = Texture2DFromNoiseMap(noiseArray);
-		//planeTextureRenderer.sharedMaterial.mainTexture = texture;
-		//planeTextureRenderer.material.mainTexture = texture;
-		// material.mainTexture
 		
 	}
 
