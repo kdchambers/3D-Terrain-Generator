@@ -48,9 +48,9 @@ public class PerlinNoise {
 			logger.LogWarning(logTag, "Invalid arrHeight value set. Set to default: " + DEFAULT_ARR_HEIGHT);
 		}
 
-		if(scale < 0.00001f)
+		if(scale < 0.0001f)
 		{
-			scale = 0.00001f;
+			scale = 0.0001f;
 			logger.LogWarning(logTag, "Scale too low. Clamped to 0.0001f");
 		}
 
@@ -64,12 +64,16 @@ public class PerlinNoise {
 			numOctaves = 1;
 			logger.LogWarning(logTag, "Invalid numOctaves value set. Clamped up to 1");
 		}
+
 	}
 
 	public float[,] GenerateNoiseArr()
 	{
 		/* Validations */
 		ValidateState();
+
+		float maxVal = float.MinValue;
+		float minVal = float.MaxValue;
 
 		/* Setup Psuedo Random Number Generator with given seed */
 		System.Random seededNumberGenerator = new System.Random(seed);
@@ -84,6 +88,9 @@ public class PerlinNoise {
 			octaveOffsets[i] = new Vector2 (offset[0], offset[1]);
 		}
 
+		float halfWidth = arrWidth / 2f;
+		float halfHeight = arrHeight / 2f;
+
 		for (int y = 0; y < arrHeight; y++) {
 			for (int x = 0; x < arrWidth; x++) {
 		
@@ -93,27 +100,25 @@ public class PerlinNoise {
 				float frequency = 1;
 
 				for (int i = 0; i < numOctaves; i++) {
-					float perlinX = x / scale * frequency + octaveOffsets[i].x;
-					float perlinY = y / scale * frequency + octaveOffsets[i].y;
+					float perlinX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
+					float perlinY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
 
-					float perlinValue = Mathf.PerlinNoise(perlinX, perlinY) * 2 - 1;
+					float perlinValue = Mathf.PerlinNoise(perlinX, perlinY);
 					currentVal += perlinValue * amplitude;
 
 					amplitude *= persistance;
 					frequency *= lacunarity;
 				}
 
-				noiseArr [x, y] = currentVal;
-			}
-		}
+				if(currentVal < minVal)
+					minVal = currentVal;
+				else if(currentVal > maxVal)
+					maxVal = currentVal;
 
-/*
-		for (int y = 0; y < mapHeight; y++) {
-			for (int x = 0; x < mapWidth; x++) {
-				noiseMap [x, y] = Mathf.InverseLerp (minNoiseHeight, maxNoiseHeight, noiseMap [x, y]);
+				/* Normalise */
+				noiseArr[x, y] = Mathf.InverseLerp(minVal, maxVal, currentVal);
 			}
 		}
-*/
 
 		return noiseArr;
 	}

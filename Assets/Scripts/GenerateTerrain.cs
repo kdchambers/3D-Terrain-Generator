@@ -8,10 +8,11 @@ public class GenerateTerrain : MonoBehaviour{
 	public int arrHeight = -1;
 	public int seed = 1;
 	public float scale = 0.00f;
+	[Range(0,10)]
 	public int numOctaves = 2;
 	[Range(0,1)]
 	public float persistance = 0.5f;
-	[Range(0,1)]
+	[Range(0,10)]
 	public float lacunarity = 0.5f;
 
 	private PerlinNoise noiseGenerator;
@@ -42,7 +43,9 @@ public class GenerateTerrain : MonoBehaviour{
 		// Generate a noise map
 		float[,] noiseArray = noiseGenerator.GenerateNoiseArr();
 		Texture2D texture = Texture2DFromNoiseMap(noiseArray);
-		planeTextureRenderer.sharedMaterial.mainTexture = texture;
+		// planeTextureRenderer.sharedMaterial.mainTexture = texture;
+		planeTextureRenderer.material.mainTexture = texture;
+		// material.mainTexture
 		
 	}
 
