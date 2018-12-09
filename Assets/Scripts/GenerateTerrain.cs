@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class GenerateTerrain : MonoBehaviour{
 
-	public int arrWidth = -1;
-	public int arrHeight = -1;
+	[Range(1,5)]
+	public int mapSizeSetting = 1;
 	public int seed = 1;
-	public float scale = 0.00f;
+	[Range(1,10)]
+	public float scale = 1f;
 	[Range(0,10)]
 	public int numOctaves = 2;
 	[Range(0,1)]
@@ -16,7 +17,13 @@ public class GenerateTerrain : MonoBehaviour{
 	public float lacunarity = 0.5f;
 
 	private PerlinNoise noiseGenerator;
+	private int mapSize = 11;
 	public Renderer planeTextureRenderer;
+
+	public PerlinNoise getNoiseGenerator()
+	{
+		return noiseGenerator;
+	}
 
 	GenerateTerrain()
 	{
@@ -26,27 +33,139 @@ public class GenerateTerrain : MonoBehaviour{
 	public void Start()
 	{
 		planeTextureRenderer = GetComponent<Renderer>();
+		drawMap();
 	}
 
 	public void drawMap()
 	{
-		noiseGenerator.arrWidth = arrWidth;
-		noiseGenerator.arrHeight = arrHeight;
+		mapSize = mapSizeSetting * 2 + 1 + 10;
+
+		noiseGenerator.arrWidth = mapSize;
+		noiseGenerator.arrHeight = mapSize;
+
 		noiseGenerator.seed = seed;
 		noiseGenerator.scale = scale;
 		noiseGenerator.numOctaves = numOctaves;
 		noiseGenerator.persistance = persistance;
 		noiseGenerator.lacunarity = lacunarity;
 
+		transform.localScale = new Vector3(mapSize, 1, mapSize);
+
 		Debug.Log("Drawing map");
 
 		// Generate a noise map
 		float[,] noiseArray = noiseGenerator.GenerateNoiseArr();
 		Texture2D texture = Texture2DFromNoiseMap(noiseArray);
-		// planeTextureRenderer.sharedMaterial.mainTexture = texture;
-		planeTextureRenderer.material.mainTexture = texture;
+		planeTextureRenderer.sharedMaterial.mainTexture = texture;
+
+		TestGenerateMeshFromNoiseMap(noiseArray, 10);
+
+		//
+
+		//Texture2D texture = Texture2DFromNoiseMap(noiseArray);
+		//planeTextureRenderer.sharedMaterial.mainTexture = texture;
+		//planeTextureRenderer.material.mainTexture = texture;
 		// material.mainTexture
 		
+	}
+
+	public void TestGenerateMeshFromNoiseMap(float[,] noiseMap, float maxHeight)
+	{
+		int noiseArrWidth = noiseMap.GetLength(0);
+		int noiseArrHeight = noiseMap.GetLength(1);
+
+		float cellXSize = 10.0f;
+		float cellZSize = 10.0f;
+
+		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+
+		Vector3[] vertices = new Vector3[noiseArrWidth * noiseArrHeight];
+		int[] triangles = new int[(noiseArrHeight - 1) * (noiseArrWidth - 1) * 6];
+		Vector2[] uvs = new Vector2[noiseArrWidth * noiseArrHeight];
+
+		/* Generate vertices */
+		for(int x = 0; x < noiseArrWidth; x++)
+		{
+			for(int y = 0; y < noiseArrHeight; y++)
+			{
+				vertices[x * noiseArrWidth + y].x = x;
+				vertices[x * noiseArrWidth + y].y = noiseMap[x, y] * maxHeight;
+				vertices[x * noiseArrWidth + y].z = y;
+			}
+		}
+
+		for(int x = 0; x < noiseArrWidth; x++)
+		{
+			for(int y = 0; y < noiseArrHeight; y++)
+			{
+				if (x < noiseArrWidth - 1 && y < noiseArrHeight - 1)
+				{
+					triangles[0] = y;
+					triangles[1] = y + (x + 1) * noiseArrWidth;
+					triangles[2] = y + 1 + (x + 1) * noiseArrWidth;
+
+					triangles[3] = y;
+					triangles[4] = y + 1 + (x + 1) * noiseArrWidth;
+					triangles[5] = y + 1;
+				}
+
+				uvs[x * noiseArrWidth + y].x = x / (float)noiseArrWidth;
+				uvs[x * noiseArrWidth + y].y = y / (float)noiseArrHeight;
+			}
+		}
+
+		mesh.vertices = vertices;
+		mesh.triangles = triangles;
+		mesh.uv = uvs;
+
+		mesh.RecalculateNormals();
+	}
+
+	public void GenerateMeshFromNoiseMap(float[,] noiseMap, int inverseResolution, float maxHeight)
+	{
+		if(inverseResolution < 4)
+			inverseResolution = 4;
+
+		int noiseArrWidth = noiseMap.GetLength(0);
+		int noiseArrHeight = noiseMap.GetLength(1);
+
+		int mapZSize = (noiseArrHeight - 1) / inverseResolution + 1;
+		int mapXSize = (noiseArrWidth - 1) / inverseResolution + 1;
+
+		float cellXSize = noiseArrWidth / mapXSize;
+		float cellZSize = noiseArrHeight / mapZSize;
+
+		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+		Vector3[] vertices = new Vector3[mapXSize * mapZSize];
+		int[] triangles = new int[(mapXSize - 1) * (mapZSize - 1) * 6];
+
+		/* Generate vertices */
+		for(int x = 0; x < mapXSize; x++)
+		{
+			for(int y = 0; y < mapZSize; y++)
+			{
+				vertices[x * mapXSize + y].x = x * cellXSize;
+				vertices[x * mapXSize + y].y = noiseMap[x * inverseResolution, y * inverseResolution] * maxHeight;
+				vertices[x * mapXSize + y].z = y * cellZSize;
+			}
+		}
+
+		for(int x = 0; x < mapZSize - 1; x++)
+		{
+			for(int y = 0; y < mapXSize - 1; y++)
+			{
+				triangles[0] = y;
+				triangles[1] = y + (x + 1) * mapXSize;
+				triangles[2] = y + 1 + (x + 1) * mapXSize;
+
+				triangles[3] = y;
+				triangles[4] = y + 1 + (x + 1) * mapXSize;
+				triangles[5] = y + 1;
+			}
+		}
+
+		mesh.vertices = vertices;
+		mesh.triangles = triangles;
 	}
 
 	public static Texture2D Texture2DFromNoiseMap(float[,] noiseMap)
