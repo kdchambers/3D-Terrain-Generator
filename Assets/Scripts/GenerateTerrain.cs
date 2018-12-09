@@ -15,10 +15,12 @@ public class GenerateTerrain : MonoBehaviour{
 	public float persistance = 0.5f;
 	[Range(0,10)]
 	public float lacunarity = 0.5f;
+	public bool renderMesh = false;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 11;
 	public Renderer planeTextureRenderer;
+	// public MeshRenderer planeMeshRenderer;
 
 	public PerlinNoise getNoiseGenerator()
 	{
@@ -53,12 +55,26 @@ public class GenerateTerrain : MonoBehaviour{
 
 		Debug.Log("Drawing map");
 
-		// Generate a noise map
 		float[,] noiseArray = noiseGenerator.GenerateNoiseArr();
 		Texture2D texture = Texture2DFromNoiseMap(noiseArray);
-		planeTextureRenderer.sharedMaterial.mainTexture = texture;
 
-		TestGenerateMeshFromNoiseMap(noiseArray, 10);
+		if(renderMesh)
+		{
+			/* Reset mesh texture */
+			planeTextureRenderer.material.mainTexture = planeTextureRenderer.sharedMaterial.mainTexture;
+			TestGenerateMeshFromNoiseMap(noiseArray, 10);
+			GetComponent<MeshRenderer>().material.mainTexture = texture;
+		}else
+		{
+			planeTextureRenderer.material.mainTexture = texture;
+		}
+
+		// Generate a noise map
+		
+		
+		
+
+		//TestGenerateMeshFromNoiseMap(noiseArray, 10);
 
 		//
 
@@ -94,19 +110,22 @@ public class GenerateTerrain : MonoBehaviour{
 			}
 		}
 
+		int triangleIndex = 0;
 		for(int x = 0; x < noiseArrWidth; x++)
 		{
 			for(int y = 0; y < noiseArrHeight; y++)
 			{
 				if (x < noiseArrWidth - 1 && y < noiseArrHeight - 1)
 				{
-					triangles[0] = y;
-					triangles[1] = y + (x + 1) * noiseArrWidth;
-					triangles[2] = y + 1 + (x + 1) * noiseArrWidth;
+					triangles[triangleIndex] = y;
+					triangles[triangleIndex + 1] = y + (x + 1) * noiseArrWidth;
+					triangles[triangleIndex + 2] = y + 1 + (x + 1) * noiseArrWidth;
 
-					triangles[3] = y;
-					triangles[4] = y + 1 + (x + 1) * noiseArrWidth;
-					triangles[5] = y + 1;
+					triangles[triangleIndex + 3] = y;
+					triangles[triangleIndex + 4] = y + 1 + (x + 1) * noiseArrWidth;
+					triangles[triangleIndex + 5] = y + 1;
+
+					triangleIndex += 6;
 				}
 
 				uvs[x * noiseArrWidth + y].x = x / (float)noiseArrWidth;
@@ -188,6 +207,8 @@ public class GenerateTerrain : MonoBehaviour{
 			}
 		}
 
+		resultTexture.filterMode = FilterMode.Point;
+		resultTexture.wrapMode = TextureWrapMode.Clamp;
 		resultTexture.SetPixels(colorMap);
 		resultTexture.Apply();
 
