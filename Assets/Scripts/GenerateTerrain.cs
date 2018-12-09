@@ -41,11 +41,11 @@ public class GenerateTerrain : MonoBehaviour{
 
 		terrains = new TerrainType[5];
 
-		terrains[0] = new TerrainType(Color.blue, 0.0f);
-		terrains[1] = new TerrainType(Color.yellow, 0.3f);
-		terrains[2] = new TerrainType(Color.green, 0.4f);
-		terrains[3] = new TerrainType(Color.grey, 0.6f);
-		terrains[4] = new TerrainType(Color.white, 0.85f);
+		terrains[0] = new TerrainType(Color.blue, 0.3f);
+		terrains[1] = new TerrainType(Color.yellow, 0.4f);
+		terrains[2] = new TerrainType(Color.green, 0.75f);
+		terrains[3] = new TerrainType(Color.grey, 0.9f);
+		terrains[4] = new TerrainType(Color.white, 1.0f);
 	}
 
 	public static Texture2D Generate2DTextureForTerrains(float[,] noiseMap, TerrainType[] terrainArr)
@@ -64,9 +64,10 @@ public class GenerateTerrain : MonoBehaviour{
 			{
 				for(int i = 0; i < numTerrains - 1; i++)
 				{
-					if(noiseMap[x,y] >= terrainArr[i].heightFromNormalised && noiseMap[x,y] < terrainArr[i + 1].heightFromNormalised)
+					if(noiseMap[x,y] <= terrainArr[i].heightCutoff)
 					{
 						colorMap[y * mapWidth + x] = terrainArr[i].terrainColor;
+						break;
 					}
 				}
 			}
@@ -152,8 +153,9 @@ public class GenerateTerrain : MonoBehaviour{
 			for(int y = 0; y < mapSize; y++)
 			{
 				vertices[x * mapSize + y].x = x - 5;
+
 				if(enableWaterCutoff){
-					vertices[x * mapSize + y].y = (noiseMap[x,y] < terrains[0].heightFromNormalised) ? 1 + noiseMap[x,y] * maxHeight : terrains[0].heightFromNormalised;
+					vertices[x * mapSize + y].y = (noiseMap[x,y] > terrains[0].heightCutoff) ? (1 + noiseMap[x,y] * maxHeight) : terrains[0].heightCutoff * maxHeight;
 				} else {
 					vertices[x * mapSize + y].y = 1 + noiseMap[x,y] * maxHeight;
 				}
