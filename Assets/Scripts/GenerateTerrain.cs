@@ -5,7 +5,7 @@ using System.Linq;
 
 public class GenerateTerrain : MonoBehaviour{
 
-	[Range(1,100)]
+	[Range(1,50)]
 	public int mapSizeSetting = 1;
 	public int seed = 1;
 	[Range(1,10)]
@@ -21,7 +21,7 @@ public class GenerateTerrain : MonoBehaviour{
 	[Range(25,500)]
 	public int maxMapHeight = 200;
 	public bool enableWaterCutoff = false;
-	public Renderer planeTextureRenderer;
+	private Renderer planeTextureRenderer;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 11;
@@ -81,6 +81,10 @@ public class GenerateTerrain : MonoBehaviour{
 	public void Start()
 	{
 		planeTextureRenderer = GetComponent<Renderer>();
+
+		if(planeTextureRenderer == null)
+			planeTextureRenderer = GetComponent<Renderer>();
+
 		drawMap();
 	}
 
