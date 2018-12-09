@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class GenerateTerrain : MonoBehaviour{
 
@@ -17,12 +18,16 @@ public class GenerateTerrain : MonoBehaviour{
 	public float lacunarity = 0.5f;
 	public bool renderMesh = false;
 	public bool useTerrainColors = false;
+	[Range(100,500)]
+	public int maxMapHeight = 200;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 11;
 	public Renderer planeTextureRenderer;
 	private TerrainType[] terrains; 
 	// public MeshRenderer planeMeshRenderer;
+
+	private static bool flipped = false;
 
 	public PerlinNoise getNoiseGenerator()
 	{
@@ -82,6 +87,12 @@ public class GenerateTerrain : MonoBehaviour{
 
 	public void drawMap()
 	{
+		if(flipped == false)
+		{
+			// GetComponent<Plane>().Flip();
+			flipped = true;
+		}
+
 		mapSize = mapSizeSetting * 5;
 
 		noiseGenerator.arrWidth = mapSize;
@@ -114,7 +125,7 @@ public class GenerateTerrain : MonoBehaviour{
 			/* Reset mesh texture */
 			planeTextureRenderer.material.mainTexture = null;
 			GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
-			TestGenerateMeshFromNoiseMap2(noiseArray, 200);
+			TestGenerateMeshFromNoiseMap2(noiseArray, maxMapHeight);
 			Debug.Log("Mesh Rendered");
 		}else
 		{
@@ -172,7 +183,7 @@ public class GenerateTerrain : MonoBehaviour{
 		}
 
 		mesh.vertices = vertices;
-		mesh.triangles = triangles;
+		mesh.triangles = triangles.Reverse().ToArray();
 		mesh.uv = uvs;
 		mesh.normals = normals;
 
