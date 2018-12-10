@@ -12,9 +12,9 @@ public class GenerateTerrain : MonoBehaviour{
 	public float scale = 1f;
 	[Range(0,10)]
 	public int numOctaves = 2;
-	[Range(0,10)]
+	[Range(0,1)]
 	public float persistance = 0.5f;
-	[Range(0,2)]
+	[Range(0,10)]
 	public float lacunarity = 0.5f;
 	public bool renderMesh = false;
 	public bool useTerrainColors = false;
@@ -58,7 +58,7 @@ public class GenerateTerrain : MonoBehaviour{
 		Color32[] mountainCapColors = new Color32[1];
 		mountainColors[0] = new Color32(207, 207, 207, 255);
 
-		terrains[0] = new TerrainType(seaColors, 0.3f);
+		terrains[0] = new TerrainType(seaColors, 0.35f);
 		terrains[1] = new TerrainType(beachColors, 0.4f);
 		terrains[2] = new TerrainType(landColors, 0.75f);
 		terrains[3] = new TerrainType(mountainColors, 0.9f);
@@ -85,9 +85,6 @@ public class GenerateTerrain : MonoBehaviour{
 				{
 					if(noiseMap[x,y] <= terrainArr[i].heightCutoff)
 					{
-						// Debug.Log("i -> " + i);
-						// Debug.Log("Colors: " + terrainArr[i].terrainColors.Length);
-						// Debug.Log("Index: " + ((int)random.Next(-1000, 1000)) % terrainArr[i].terrainColors.Length);
 						int numColors = terrainArr[i].terrainColors.Length;
 						Color32 currColor = terrainArr[i].terrainColors[ random.Next(1, 1000) % numColors];
 
@@ -219,7 +216,13 @@ public class GenerateTerrain : MonoBehaviour{
 		mesh.uv = uvs;
 		mesh.normals = normals;
 
+		mesh.RecalculateNormals();
 		GetComponent<MeshFilter>().mesh = mesh;
+		
+		mesh.RecalculateBounds(); 
+		GetComponent<MeshCollider>().sharedMesh = mesh;
+
+		//MeshCollider meshCollider = gameObject.AddComponent(typeof(MeshCollider)) as MeshCollider;
 
 		Debug.Log("Normals array size : " + mesh.normals.Length);
 
