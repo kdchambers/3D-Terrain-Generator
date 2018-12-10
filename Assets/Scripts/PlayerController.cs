@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-	public float forwardSpeed = 100f;
+	private float forwardSpeed = 100f;
 
     void Update()
     {
@@ -19,6 +19,6 @@ public class PlayerController : MonoBehaviour
 		tempQ.eulerAngles = new Vector3(tempQ.eulerAngles.x, tempQ.eulerAngles.y, 0);
 		transform.rotation = tempQ;
 
-        transform.Translate(0, 0, move);
+        transform.Translate(Vector3.forward * move);
     }
 }
