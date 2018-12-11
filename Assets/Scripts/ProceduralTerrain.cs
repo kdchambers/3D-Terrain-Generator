@@ -15,6 +15,7 @@ public class ProceduralTerrain {
 	private int[] chunkDimensions;
 	private TerrainType[] terrainTypes;
 	private float maxTerrainHeight = 50;
+	private const string OBJECTTYPENAME = "Terrain Map";
 	public GameObject terrainObject;
 
 	private const int XVAL = 0;
@@ -22,7 +23,7 @@ public class ProceduralTerrain {
 
 	public ProceduralTerrain(PerlinNoise noiseGenerator, int[] chunkDimensions, TerrainType[] terrainTypes)
 	{
-		terrainObject = new GameObject("Terrain Map");
+		terrainObject = new GameObject(OBJECTTYPENAME);
 		/* Set object to origin */
 		terrainObject.transform.position = new Vector3(0f, 0f, 0f);		
 
@@ -39,20 +40,49 @@ public class ProceduralTerrain {
 
 	public void Clear()
 	{
-		for(int x = 0; x < terrainChunks.GetLength(0); x++)
+		if(terrainChunks == null || terrainChunks.GetLength(0) == 0 || terrainChunks[0,0] == null)
+		{
+			Debug.Log("No terrain map in scene to clear");
+			return;
+		}
+
+		int terrainChunksWidth = terrainChunks.GetLength(0);
+		int terrainChunksHeight = terrainChunks.GetLength(1);
+
+		for(int x = terrainChunksWidth - 1; x >= 0; x--)
         {
-        	for(int y = 0; y < terrainChunks.GetLength(1); y++)
+        	for(int y = terrainChunksHeight - 1; y >= 0; y--)
         	{
         		terrainChunks[x,y].SetVisable(false);
+        		terrainChunks[x,y].PrepareForDelete();
+        		terrainChunks[x,y] = null;
         	}
         }
 
-		foreach (Transform terrainChunk in terrainObject.transform)
-        {
-            GameObject.Destroy(terrainChunk);
-        }
+    	object[] allRootObjects = GameObject.FindObjectsOfType(typeof (GameObject));
+    	GameObject[] terrainsToDelete = new GameObject[terrainChunksWidth * terrainChunksHeight];
 
-        terrainChunks[0,0] = null;
+    	int terrainsFound = 0;
+
+		foreach (object currentObject in allRootObjects)
+		{
+		    GameObject currentGameObject = (GameObject) currentObject;
+
+		    if(currentGameObject.name == OBJECTTYPENAME)
+		    {
+		    	terrainsToDelete[terrainsFound] = currentGameObject;
+		    	terrainsFound++;
+		    }
+		}
+
+		allRootObjects = null;
+
+		for(int i = terrainsFound - 1; i >= 0; i--)
+			GameObject.DestroyImmediate(terrainsToDelete[i]);
+
+		terrainsToDelete = null;
+
+		Debug.Log(terrainsFound + " " + OBJECTTYPENAME + "'s deleted from scene");
 	}
 
 	public void UpdateMap(Vector2 playerPosition)

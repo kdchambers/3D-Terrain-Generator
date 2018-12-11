@@ -26,6 +26,7 @@ public class GenerateTerrain : MonoBehaviour{
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 5;
 	private TerrainType[] terrains; 
+	private ProceduralTerrain terrain;
 
 	GenerateTerrain()
 	{
@@ -64,13 +65,24 @@ public class GenerateTerrain : MonoBehaviour{
 		drawMap();
 	}
 
+	public void ClearMap()
+	{
+		if(terrain != null)
+			terrain.Clear();
+		else
+			Debug.Log("Terrain not yet set");
+	}
+
 
 	public void drawMap()
 	{
 		mapSize = mapSizeSetting * 5;
 		noiseGenerator = new PerlinNoise(mapSize, mapSize, seed, scale, numOctaves, persistance, lacunarity);
 		transform.localScale = new Vector3(5, 1, 5);
-		ProceduralTerrain terrain = new ProceduralTerrain(noiseGenerator, new int[2]{mapSize,mapSize}, terrains);
+
+		
+		ClearMap();
+		terrain = new ProceduralTerrain(noiseGenerator, new int[2]{mapSize,mapSize}, terrains);
 		terrain.Render();
 
 /*

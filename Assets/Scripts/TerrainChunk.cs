@@ -20,6 +20,7 @@ public class TerrainChunk {
 		meshFilter = chunkObject.AddComponent<MeshFilter>() as MeshFilter;
 		meshCollider = chunkObject.AddComponent<MeshCollider>() as MeshCollider;
 
+		this.mesh = mesh;
 		meshRenderer.material.mainTexture = texture;
 
 		mesh.RecalculateNormals();
@@ -30,6 +31,17 @@ public class TerrainChunk {
 
 		chunkObject.transform.position = new Vector3(globalPositionIndex.x * (float)chunkSize, 0f, globalPositionIndex.y * (float)chunkSize);
 		chunkObject.transform.parent = parent;
+	}
+
+	public void PrepareForDelete()
+	{
+		GameObject.DestroyImmediate(meshRenderer);
+		GameObject.DestroyImmediate(meshFilter);
+		GameObject.DestroyImmediate(meshCollider);
+		GameObject.DestroyImmediate(mesh);
+
+		chunkObject.transform.parent = null;
+		GameObject.DestroyImmediate(chunkObject);
 	}
 
 	public bool IsVisable()
