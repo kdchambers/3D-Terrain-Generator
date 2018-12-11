@@ -15,7 +15,7 @@ public class ProceduralTerrain {
 	private int[] chunkDimensions;
 	private TerrainType[] terrainTypes;
 	private float maxTerrainHeight = 50;
-	private const string OBJECTTYPENAME = "Terrain Map";
+	public const string OBJECTTYPENAME = "Terrain Map";
 	public GameObject terrainObject;
 
 	private const int XVAL = 0;

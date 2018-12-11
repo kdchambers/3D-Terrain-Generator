@@ -63,12 +63,34 @@ public class GenerateTerrain : MonoBehaviour{
 		drawMap();
 	}
 
+
+
 	public void ClearMap()
 	{
-		if(terrain != null)
-			terrain.Clear();
-		else
-			Debug.Log("Terrain not yet set");
+		object[] allRootObjects = GameObject.FindObjectsOfType(typeof (GameObject));
+    	GameObject[] terrainsToDelete = new GameObject[allRootObjects.Length];
+
+    	int terrainsFound = 0;
+
+		foreach (object currentObject in allRootObjects)
+		{
+		    GameObject currentGameObject = (GameObject) currentObject;
+
+		    if(currentGameObject.name == ProceduralTerrain.OBJECTTYPENAME)
+		    {
+		    	terrainsToDelete[terrainsFound] = currentGameObject;
+		    	terrainsFound++;
+		    }
+		}
+
+		allRootObjects = null;
+
+		for(int i = terrainsFound - 1; i >= 0; i--)
+			GameObject.DestroyImmediate(terrainsToDelete[i]);
+
+		terrainsToDelete = null;
+
+		Debug.Log(terrainsFound + " " + ProceduralTerrain.OBJECTTYPENAME + "'s deleted from scene");
 	}
 
 	public void drawMap()
