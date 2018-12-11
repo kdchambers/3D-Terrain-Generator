@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class Terrain : MonoBehaviour {
+public class ProceduralTerrain {
 
 	private TerrainChunk[,] terrainChunks;
 	/* 	How many chunks in each distance to render 
@@ -20,16 +20,44 @@ public class Terrain : MonoBehaviour {
 	private const int XVAL = 0;
 	private const int YVAL = 1;
 
-	public Terrain(PerlinNoise noiseGenerator, int[] chunkDimensions, TerrainType[] terrainTypes)
+	public ProceduralTerrain(PerlinNoise noiseGenerator, int[] chunkDimensions, TerrainType[] terrainTypes)
 	{
+		terrainObject = new GameObject("Terrain Map");
 		/* Set object to origin */
-		terrainObject.transform.position = new Vector3(0f, 0f, 0f);
+		terrainObject.transform.position = new Vector3(0f, 0f, 0f);		
 
-		chunksPerDimension = (int) Math.Floor(Math.Pow(chunkRenderDistance + (chunkRenderDistance + 1), 2));
-		terrainChunks = new TerrainChunk[chunksPerDimension, chunksPerDimension];
 		this.noiseGenerator = noiseGenerator;
 		this.chunkDimensions = chunkDimensions;
 		this.terrainTypes = terrainTypes;
+
+		chunksPerDimension = (int) Math.Floor(Math.Pow(chunkRenderDistance + (chunkRenderDistance + 1), 2));
+		Debug.Log("Chunks per Dimension : " + chunksPerDimension);
+		terrainChunks = new TerrainChunk[chunksPerDimension, chunksPerDimension];
+
+		terrainChunks[0,0] = null;
+	}
+
+	public void Clear()
+	{
+		for(int x = 0; x < terrainChunks.GetLength(0); x++)
+        {
+        	for(int y = 0; y < terrainChunks.GetLength(1); y++)
+        	{
+        		terrainChunks[x,y].SetVisable(false);
+        	}
+        }
+
+		foreach (Transform terrainChunk in terrainObject.transform)
+        {
+            GameObject.Destroy(terrainChunk);
+        }
+
+        terrainChunks[0,0] = null;
+	}
+
+	public void UpdateMap(Vector2 playerPosition)
+	{
+
 	}
 
 	public static Texture2D Generate2DTextureForTerrains(float[,] noiseMap, TerrainType[] terrainArr)
@@ -70,9 +98,27 @@ public class Terrain : MonoBehaviour {
 		return resultTexture;
 	}
 
+	public void UpdateGenerationParameters(PerlinNoise noiseGenerator, int[] chunkDimensions, TerrainType[] terrainTypes)
+	{
+		if(noiseGenerator != null)
+			this.noiseGenerator = noiseGenerator;
+
+		if(chunkDimensions != null)
+			this.chunkDimensions = chunkDimensions;
+
+		if(terrainTypes != null)
+			this.terrainTypes = terrainTypes;
+
+		chunksPerDimension = (int) Math.Floor(Math.Pow(chunkRenderDistance + (chunkRenderDistance + 1), 2));
+		terrainChunks = new TerrainChunk[chunksPerDimension, chunksPerDimension];
+	}
+
 	/* Vector2 playerPosition */
 	public void Render()
 	{
+		if(terrainChunks[0,0] != null)
+			this.Clear();
+
 		for(int x = 0; x < chunksPerDimension; x++)
 		{
 			for(int y = 0; y < chunksPerDimension; y++)
@@ -82,7 +128,7 @@ public class Terrain : MonoBehaviour {
 				Mesh mesh = GenerateMeshFromNoiseMap(currentNoiseArray, maxTerrainHeight, terrainTypes[0].heightCutoff);
 				Texture2D texture = Generate2DTextureForTerrains(currentNoiseArray, terrainTypes);
 
-				terrainChunks[x,y] = new TerrainChunk(new Vector2(x, y), chunksPerDimension, this.transform, mesh, texture);
+				terrainChunks[x,y] = new TerrainChunk(new Vector2(x, y), chunksPerDimension, terrainObject.transform, mesh, texture);
 			}
 		}
 	}

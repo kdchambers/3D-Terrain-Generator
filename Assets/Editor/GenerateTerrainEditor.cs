@@ -9,7 +9,7 @@ public class GenerateTerrainEditor : Editor {
 		GenerateTerrain terrainGenerator = (GenerateTerrain)target;
 
 		if (DrawDefaultInspector()) {
-				terrainGenerator.drawMap();
+				// terrainGenerator.drawMap();
 		}
 
 		if (GUILayout.Button("Generate")) {

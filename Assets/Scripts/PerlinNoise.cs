@@ -21,20 +21,28 @@ public class PerlinNoise {
 	public int numOctaves = DEFAULT_NUM_OCTAVES;
 	public float persistance = DEFAULT_PERSISTANCE;
 	public float lacunarity = DEFAULT_LACUNARITY;
-	public int seededNumberGeneratorMaxVal = 5000;
-	public int seededNumberGeneratorMinVal = -5000;
+	public int seededNumberGeneratorMaxVal = DEFAULT_SEEDED_GEN_MAX_VAL;
+	public int seededNumberGeneratorMinVal = DEFAULT_SEEDED_GEN_MIN_VAL;
 
-	private static ILogger logger = Debug.unityLogger;
-	private static string logTag = "TerrainGenerator";
+	private ILogger logger = Debug.unityLogger;
+	private const string logTag = "TerrainGenerator";
 
-	private void ValidateState()
+	public PerlinNoise(int arrWidth, int arrHeight, int seed, float scale, int numOctaves, float persistance, float lacunarity)
 	{
-		if(seededNumberGeneratorMaxVal <= seededNumberGeneratorMinVal)
-		{
-			seededNumberGeneratorMinVal = DEFAULT_SEEDED_GEN_MIN_VAL;
-			seededNumberGeneratorMaxVal = DEFAULT_SEEDED_GEN_MAX_VAL;
-			logger.LogWarning(logTag, "Invalid seenNumberGenerator MIN or MAX. Setting to default values");
-		}
+		this.arrWidth = arrWidth;
+		this.arrHeight = arrHeight;
+		this.seed = seed;
+		this.scale = scale;
+		this.numOctaves = numOctaves;
+		this.persistance = persistance;
+		this.lacunarity = lacunarity;
+
+		ValidateState();
+	}
+
+	private static void ValidateInput(int arrWidth, int arrHeight, int seed, float scale, int numOctaves)
+	{
+		ILogger logger = Debug.unityLogger;
 
 		if(arrWidth < 1)
 		{
@@ -64,10 +72,97 @@ public class PerlinNoise {
 			numOctaves = 1;
 			logger.LogWarning(logTag, "Invalid numOctaves value set. Clamped up to 1");
 		}
-
 	}
 
-	public float[,] GenerateNoiseArr()
+	public static float[,] GenerateNoiseArr(int arrWidth, int arrHeight, int seed, float scale, int numOctaves, float persistance, float lacunarity, int xIndex, int yIndex)
+	{
+		/* Validations */
+		ValidateInput(arrWidth, arrHeight, seed, scale, numOctaves);
+
+		float maxVal = float.MinValue;
+		float minVal = float.MaxValue;
+
+		/* Setup Psuedo Random Number Generator with given seed */
+		System.Random seededNumberGenerator = new System.Random(seed);
+		Vector2[] octaveOffsets = new Vector2[numOctaves];
+		float[,] noiseArr = new float[arrWidth, arrWidth];
+
+		float[] offset = new float[2];
+		offset[0] = seededNumberGenerator.Next(-5000, 5000);
+		offset[1] = seededNumberGenerator.Next(-5000, 5000);
+		
+		for (int i = 0; i < numOctaves; i++) {
+			octaveOffsets[i] = new Vector2 (offset[0], offset[1]);
+		}
+
+		float halfWidth = arrWidth / 2f;
+		float halfHeight = arrHeight / 2f;
+
+		for (int y = 0; y < arrHeight; y++) {
+			for (int x = 0; x < arrWidth; x++) {
+		
+				float currentVal = 0;
+
+				float amplitude = 1;
+				float frequency = 1;
+
+				for (int i = 0; i < numOctaves; i++) {
+					float perlinX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x + (xIndex * arrWidth);
+					float perlinY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y + (yIndex * arrHeight);
+
+					float perlinValue = Mathf.PerlinNoise(perlinX, perlinY);
+					currentVal += perlinValue * amplitude;
+
+					amplitude *= persistance;
+					frequency *= lacunarity;
+				}
+
+				if(currentVal < minVal)
+					minVal = currentVal;
+				else if(currentVal > maxVal)
+					maxVal = currentVal;
+
+				/* Normalise */
+				noiseArr[x, y] = Mathf.InverseLerp(minVal, maxVal, currentVal);
+			}
+		}
+
+		return noiseArr;
+	}
+
+	private void ValidateState()
+	{
+		if(arrWidth < 1)
+		{
+			arrWidth = DEFAULT_ARR_WIDTH;
+			logger.LogWarning(logTag, "Invalid arrWidth value set. Set to default: " + DEFAULT_ARR_WIDTH);
+		}
+
+		if(arrHeight < 1)
+		{
+			arrHeight = DEFAULT_ARR_HEIGHT;
+			logger.LogWarning(logTag, "Invalid arrHeight value set. Set to default: " + DEFAULT_ARR_HEIGHT);
+		}
+
+		if(scale < 0.0001f)
+		{
+			scale = 0.0001f;
+			logger.LogWarning(logTag, "Scale too low. Clamped to 0.0001f");
+		}
+
+		if(seed < 0)
+		{
+			logger.LogWarning(logTag, "Seed is negative. Absolute value will be used instead");
+		}
+
+		if(numOctaves < 1)
+		{
+			numOctaves = 1;
+			logger.LogWarning(logTag, "Invalid numOctaves value set. Clamped up to 1");
+		}
+	}
+
+	public float[,] GenerateNoiseArr(int xIndex, int yIndex)
 	{
 		/* Validations */
 		ValidateState();
@@ -100,8 +195,8 @@ public class PerlinNoise {
 				float frequency = 1;
 
 				for (int i = 0; i < numOctaves; i++) {
-					float perlinX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
-					float perlinY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
+					float perlinX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x + (xIndex * arrWidth);
+					float perlinY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y + (yIndex * arrHeight);
 
 					float perlinValue = Mathf.PerlinNoise(perlinX, perlinY);
 					currentVal += perlinValue * amplitude;

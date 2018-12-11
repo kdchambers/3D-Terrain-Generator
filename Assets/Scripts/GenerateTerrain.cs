@@ -19,23 +19,16 @@ public class GenerateTerrain : MonoBehaviour{
 	public bool renderMesh = false;
 	public bool useTerrainColors = false;
 	[Range(25,500)]
-	public int maxMapHeight = 200;
+	public int maxMapHeight = 50;
 	public bool enableWaterCutoff = false;
 	private Renderer planeTextureRenderer;
 
 	private PerlinNoise noiseGenerator;
-	private int mapSize = 11;
+	private int mapSize = 5;
 	private TerrainType[] terrains; 
-
-	public PerlinNoise getNoiseGenerator()
-	{
-		return noiseGenerator;
-	}
 
 	GenerateTerrain()
 	{
-		noiseGenerator = new PerlinNoise();
-
 		terrains = new TerrainType[5];
 
 		Color32[] seaColors = new Color32[1];
@@ -65,168 +58,30 @@ public class GenerateTerrain : MonoBehaviour{
 		terrains[4] = new TerrainType(mountainCapColors, 1.0f);
 	}
 
-	public static Texture2D Generate2DTextureForTerrains(float[,] noiseMap, TerrainType[] terrainArr)
-	{
-		int mapWidth = noiseMap.GetLength(0);
-		int mapHeight = noiseMap.GetLength(1);
-		int numTerrains = terrainArr.Length;
-
-		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
-		Color[] colorMap = new Color[mapWidth * mapHeight];
-
-		System.Random random = new System.Random (1332);
-
-		/* Generate color pixels */
-		for(int x = 0; x < mapWidth; x++)
-		{
-			for(int y = 0; y < mapHeight; y++)
-			{
-				for(int i = 0; i < numTerrains; i++)
-				{
-					if(noiseMap[x,y] <= terrainArr[i].heightCutoff)
-					{
-						int numColors = terrainArr[i].terrainColors.Length;
-						Color32 currColor = terrainArr[i].terrainColors[ random.Next(1, 1000) % numColors];
-
-						colorMap[y * mapWidth + x] = currColor;
-						break;
-					}
-				}
-			}
-		}
-
-		resultTexture.filterMode = FilterMode.Point;
-		resultTexture.wrapMode = TextureWrapMode.Clamp;
-		resultTexture.SetPixels(colorMap);
-		resultTexture.Apply();
-
-		return resultTexture;
-	}
 
 	public void Start()
 	{
 		drawMap();
 	}
 
+
 	public void drawMap()
 	{
-
-		if(planeTextureRenderer == null)
-			planeTextureRenderer = GetComponent<Renderer>();
-
 		mapSize = mapSizeSetting * 5;
-
-		noiseGenerator.arrWidth = mapSize;
-		noiseGenerator.arrHeight = mapSize;
-
-		noiseGenerator.seed = seed;
-		noiseGenerator.scale = scale;
-		noiseGenerator.numOctaves = numOctaves;
-		noiseGenerator.persistance = persistance;
-		noiseGenerator.lacunarity = lacunarity;
-
+		noiseGenerator = new PerlinNoise(mapSize, mapSize, seed, scale, numOctaves, persistance, lacunarity);
 		transform.localScale = new Vector3(5, 1, 5);
+		ProceduralTerrain terrain = new ProceduralTerrain(noiseGenerator, new int[2]{mapSize,mapSize}, terrains);
+		terrain.Render();
 
-		Debug.Log("Drawing map");
-
-		float[,] noiseArray = noiseGenerator.GenerateNoiseArr();
-
-		Texture2D texture;
-
-		if(useTerrainColors)
-		{
-			texture = Generate2DTextureForTerrains(noiseArray, terrains);
-		}else
-		{
-			texture = Texture2DFromNoiseMap(noiseArray);
-		}
-
-		if(renderMesh)
-		{
-			/* Reset mesh texture */
-			planeTextureRenderer.material.mainTexture = null;
-			GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
-			GenerateMeshFromNoiseMap(noiseArray, maxMapHeight);
-			Debug.Log("Mesh Rendered");
-		}else
-		{
-			planeTextureRenderer.material.mainTexture = texture;
-		}
-		
+/*
+		float[,] noiseArray = noiseGenerator.GenerateNoiseArr(0, 0);
+		Texture2D texture = Generate2DTextureForTerrains(noiseArray, terrains);
+		planeTextureRenderer.material.mainTexture = null;
+		GetComponent<MeshRenderer>().material.mainTexture = texture;
+		GenerateMeshFromNoiseMap(noiseArray, maxMapHeight);
+		*/
 	}
 
-	public void GenerateMeshFromNoiseMap(float[,] noiseMap, float maxHeight)
-	{
-		int mapSize = noiseMap.GetLength(0);
-
-		Vector3[] vertices = new Vector3[mapSize * mapSize];
-		int[] triangles = new int[(mapSize - 1)*(mapSize - 1) * 6];
-		Vector2[] uvs = new Vector2[mapSize * mapSize];
-
-		Mesh mesh = new Mesh();
-		Vector3[] normals = new Vector3[mapSize * mapSize];
-
-		for(int x = 0; x < mapSize; x++)
-		{
-			for(int y = 0; y < mapSize; y++)
-			{
-				vertices[x * mapSize + y].x = x - 5;
-
-				if(enableWaterCutoff){
-					vertices[x * mapSize + y].y = (noiseMap[x,y] > terrains[0].heightCutoff) ? (1 + noiseMap[x,y] * maxHeight) : terrains[0].heightCutoff * maxHeight;
-				} else {
-					vertices[x * mapSize + y].y = 1 + noiseMap[x,y] * maxHeight;
-				}
-
-				vertices[x * mapSize + y].z = y - 5;
-
-				// Debug.Log( "(" + x + "," + y + ") -> " + noiseMap[x,y] );
-
-				normals[x * mapSize + y].x = 0;
-				normals[x * mapSize + y].y = 1;
-				normals[x * mapSize + y].z = 0;
-			}
-		}
-
-		int triangleIndex = 0;
-		for(int y = 0; y < mapSize; y++)
-		{
-			for(int x = 0; x < mapSize; x++)
-			{
-				if (x < (mapSize - 1) && y < (mapSize - 1))
-				{
-					triangles[triangleIndex] = x + (y * mapSize);							// Top left
-					triangles[triangleIndex + 1] = x + mapSize + (y * mapSize);				// Bottom left
-					triangles[triangleIndex + 2] = x + mapSize + 1 + (y * mapSize);			// Bottom Right
-
-					triangles[triangleIndex + 3] = x + (y * mapSize);						// Top left
-					triangles[triangleIndex + 4] = x + mapSize + 1 + (y * mapSize);			// Bottom Right
-					triangles[triangleIndex + 5] = x + 1 + (y * mapSize);					// Top Right
-
-					triangleIndex += 6;
-				}
-
-				uvs[x * mapSize + y].x = x / (float)mapSize;
-				uvs[x * mapSize + y].y = y / (float)mapSize;
-			}
-		}
-
-		mesh.vertices = vertices;
-		mesh.triangles = triangles.Reverse().ToArray();
-		mesh.uv = uvs;
-		mesh.normals = normals;
-
-		mesh.RecalculateNormals();
-		GetComponent<MeshFilter>().mesh = mesh;
-		
-		mesh.RecalculateBounds(); 
-		GetComponent<MeshCollider>().sharedMesh = mesh;
-
-		//MeshCollider meshCollider = gameObject.AddComponent(typeof(MeshCollider)) as MeshCollider;
-
-		Debug.Log("Normals array size : " + mesh.normals.Length);
-
-	}
 
 	public static Texture2D Texture2DFromNoiseMap(float[,] noiseMap)
 	{
