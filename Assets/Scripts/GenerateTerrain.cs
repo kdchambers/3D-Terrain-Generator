@@ -18,10 +18,9 @@ public class GenerateTerrain : MonoBehaviour{
 	public float lacunarity = 0.5f;
 	public bool renderMesh = false;
 	public bool useTerrainColors = false;
+	public bool autoGenerate = false;
 	[Range(25,500)]
 	public int maxMapHeight = 50;
-	public bool enableWaterCutoff = false;
-	private Renderer planeTextureRenderer;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 5;
@@ -59,7 +58,6 @@ public class GenerateTerrain : MonoBehaviour{
 		terrains[4] = new TerrainType(mountainCapColors, 1.0f);
 	}
 
-
 	public void Start()
 	{
 		drawMap();
@@ -73,15 +71,14 @@ public class GenerateTerrain : MonoBehaviour{
 			Debug.Log("Terrain not yet set");
 	}
 
-
 	public void drawMap()
 	{
 		mapSize = mapSizeSetting * 5;
 		noiseGenerator = new PerlinNoise(mapSize, mapSize, seed, scale, numOctaves, persistance, lacunarity);
 		transform.localScale = new Vector3(5, 1, 5);
 
-		
 		ClearMap();
+
 		terrain = new ProceduralTerrain(noiseGenerator, new int[2]{mapSize,mapSize}, terrains);
 		terrain.Render();
 
@@ -92,31 +89,5 @@ public class GenerateTerrain : MonoBehaviour{
 		GetComponent<MeshRenderer>().material.mainTexture = texture;
 		GenerateMeshFromNoiseMap(noiseArray, maxMapHeight);
 		*/
-	}
-
-
-	public static Texture2D Texture2DFromNoiseMap(float[,] noiseMap)
-	{
-		int mapWidth = noiseMap.GetLength(0);
-		int mapHeight = noiseMap.GetLength(1);
-
-		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
-		Color[] colorMap = new Color[mapWidth * mapHeight];
-
-		/* Generate color pixels */
-		for(int x = 0; x < mapWidth; x++)
-		{
-			for(int y = 0; y < mapHeight; y++)
-			{
-				colorMap[y * mapWidth + x] = Color.Lerp(Color.black, Color.white, noiseMap[x,y]);
-			}
-		}
-
-		resultTexture.filterMode = FilterMode.Point;
-		resultTexture.wrapMode = TextureWrapMode.Clamp;
-		resultTexture.SetPixels(colorMap);
-		resultTexture.Apply();
-
-		return resultTexture;
 	}
 }

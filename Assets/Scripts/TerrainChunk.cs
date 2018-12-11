@@ -6,7 +6,7 @@ public class TerrainChunk {
 
 	private int chunkSize;
 	private GameObject chunkObject;
-	private Mesh mesh; 
+	// private Mesh mesh; 
 	private MeshFilter meshFilter;
 	private MeshCollider meshCollider;
 	private MeshRenderer meshRenderer;
@@ -20,7 +20,7 @@ public class TerrainChunk {
 		meshFilter = chunkObject.AddComponent<MeshFilter>() as MeshFilter;
 		meshCollider = chunkObject.AddComponent<MeshCollider>() as MeshCollider;
 
-		this.mesh = mesh;
+		// this.mesh = mesh;
 		meshRenderer.material.mainTexture = texture;
 
 		mesh.RecalculateNormals();
@@ -35,10 +35,10 @@ public class TerrainChunk {
 
 	public void PrepareForDelete()
 	{
-		GameObject.DestroyImmediate(meshRenderer);
+		/* GameObject.DestroyImmediate(meshRenderer);
 		GameObject.DestroyImmediate(meshFilter);
 		GameObject.DestroyImmediate(meshCollider);
-		GameObject.DestroyImmediate(mesh);
+		GameObject.DestroyImmediate(mesh); */
 
 		chunkObject.transform.parent = null;
 		GameObject.DestroyImmediate(chunkObject);

@@ -178,12 +178,12 @@ public class ProceduralTerrain {
 		{
 			for(int y = 0; y < mapSize; y++)
 			{
-				vertices[x * mapSize + y].x = x - 5;
+				vertices[x * mapSize + y].x = x * 20;
 
 				/* Clamp height at lower bound */
 				vertices[x * mapSize + y].y = (noiseMap[x,y] > minHeightClamp) ? (1 + noiseMap[x,y] * maxHeight) : minHeightClamp * maxHeight;
 
-				vertices[x * mapSize + y].z = y - 5;
+				vertices[x * mapSize + y].z = y * 20;
 
 				normals[x * mapSize + y].x = 0;
 				normals[x * mapSize + y].y = 1;
@@ -220,5 +220,30 @@ public class ProceduralTerrain {
 		mesh.normals = normals;
 
 		return mesh;
+	}
+
+	public static Texture2D Texture2DFromNoiseMap(float[,] noiseMap)
+	{
+		int mapWidth = noiseMap.GetLength(0);
+		int mapHeight = noiseMap.GetLength(1);
+
+		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
+		Color[] colorMap = new Color[mapWidth * mapHeight];
+
+		/* Generate color pixels */
+		for(int x = 0; x < mapWidth; x++)
+		{
+			for(int y = 0; y < mapHeight; y++)
+			{
+				colorMap[y * mapWidth + x] = Color.Lerp(Color.black, Color.white, noiseMap[x,y]);
+			}
+		}
+
+		resultTexture.filterMode = FilterMode.Point;
+		resultTexture.wrapMode = TextureWrapMode.Clamp;
+		resultTexture.SetPixels(colorMap);
+		resultTexture.Apply();
+
+		return resultTexture;
 	}
 }
