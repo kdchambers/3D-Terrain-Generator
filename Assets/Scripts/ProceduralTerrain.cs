@@ -151,6 +151,8 @@ public class ProceduralTerrain {
 
 		for(int x = 0; x < chunksPerDimension; x++)
 		{
+			int relativeX = x - (chunksPerDimension - 1) / 2;
+
 			for(int y = 0; y < chunksPerDimension; y++)
 			{
 				/* Set Noise generation offset to chunkSize * global chunk dimension index */
@@ -165,7 +167,9 @@ public class ProceduralTerrain {
 				Mesh mesh = GenerateMeshFromNoiseMap(currentNoiseArray, maxTerrainHeight, terrainTypes[0].heightCutoff);
 				Texture2D texture = Generate2DTextureForTerrains(currentNoiseArray, terrainTypes);
 
-				terrainChunks[x,y] = new TerrainChunk(	new Vector2(x, y), 
+				int relativeY = y - (chunksPerDimension - 1) / 2;
+
+				terrainChunks[x,y] = new TerrainChunk(	new Vector2(relativeX, relativeY), 
 														new Vector2(currentNoiseArray.GetLength(0), currentNoiseArray.GetLength(1)), 
 														terrainObject.transform, mesh, texture);
 			}
