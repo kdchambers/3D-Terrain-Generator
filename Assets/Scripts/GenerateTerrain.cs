@@ -5,10 +5,11 @@ using System.Linq;
 
 public class GenerateTerrain : MonoBehaviour{
 
-	[Range(1,50)]
-	public int mapSizeSetting = 1;
+	/* Parameters to conrol terrain generation */
+	[Range(30,50)]
+	public int mapSizeSetting = 50;
 	public int seed = 1;
-	[Range(1,10)]
+	[Range(1,100)]
 	public float scale = 1f;
 	[Range(0,10)]
 	public int numOctaves = 2;
@@ -16,11 +17,12 @@ public class GenerateTerrain : MonoBehaviour{
 	public float persistance = 0.5f;
 	[Range(0,10)]
 	public float lacunarity = 0.5f;
-	public bool renderMesh = false;
-	public bool useTerrainColors = false;
+	public bool useTerrainColors = true;
 	public bool autoGenerate = false;
-	[Range(25,500)]
-	public int maxMapHeight = 50;
+	[Range(10,100)]
+	public int maxMapHeight = 30;
+	[Range(0,3)]
+	public int chunkRenderDistance;
 
 	private PerlinNoise noiseGenerator;
 	private int mapSize = 5;
@@ -29,6 +31,7 @@ public class GenerateTerrain : MonoBehaviour{
 
 	GenerateTerrain()
 	{
+		/* Define the different types of terrain based on height */
 		terrains = new TerrainType[5];
 
 		Color32[] seaColors = new Color32[1];
@@ -39,6 +42,7 @@ public class GenerateTerrain : MonoBehaviour{
 		beachColors[1] = new Color32(255, 255, 51, 255);
 
 		Color32[] landColors = new Color32[4];
+		/* Each terrain type can get multiple colours to add variety to it */
 		landColors[0] = new Color32(5, 128, 50, 255);
 		landColors[1] = new Color32(15, 74, 29, 255);
 		landColors[2] = new Color32(11, 150, 87, 255);
@@ -62,8 +66,6 @@ public class GenerateTerrain : MonoBehaviour{
 	{
 		drawMap();
 	}
-
-
 
 	public void ClearMap()
 	{
@@ -101,15 +103,7 @@ public class GenerateTerrain : MonoBehaviour{
 
 		ClearMap();
 
-		terrain = new ProceduralTerrain(noiseGenerator, new int[2]{mapSize,mapSize}, terrains);
-		terrain.Render();
-
-/*
-		float[,] noiseArray = noiseGenerator.GenerateNoiseArr(0, 0);
-		Texture2D texture = Generate2DTextureForTerrains(noiseArray, terrains);
-		planeTextureRenderer.material.mainTexture = null;
-		GetComponent<MeshRenderer>().material.mainTexture = texture;
-		GenerateMeshFromNoiseMap(noiseArray, maxMapHeight);
-		*/
+		terrain = new ProceduralTerrain(noiseGenerator, chunkRenderDistance, terrains, maxMapHeight);
+		terrain.Render(useTerrainColors);
 	}
 }

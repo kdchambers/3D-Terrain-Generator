@@ -9,27 +9,31 @@ public class ProceduralTerrain {
 	private TerrainChunk[,] terrainChunks;
 	/* 	How many chunks in each distance to render 
 		E.g when 1, will render the players chunk, and 8 others (1 in each direction + diagnals) */
-	private int chunkRenderDistance = 1;
+	private int chunkRenderDistance = 0;
 	private int chunksPerDimension;
 	private PerlinNoise noiseGenerator;
 	private int[] chunkDimensions;
 	private TerrainType[] terrainTypes;
-	private float maxTerrainHeight = 50;
+	private float maxTerrainHeight = 20;
 	public const string OBJECTTYPENAME = "Terrain Map";
 	public GameObject terrainObject;
 
 	private const int XVAL = 0;
 	private const int YVAL = 1;
 
-	public ProceduralTerrain(PerlinNoise noiseGenerator, int[] chunkDimensions, TerrainType[] terrainTypes)
+	public ProceduralTerrain(PerlinNoise noiseGenerator, int chunkRenderDistance, TerrainType[] terrainTypes, float maxMapHeight)
 	{
 		terrainObject = new GameObject(OBJECTTYPENAME);
 		/* Set object to origin */
-		terrainObject.transform.position = new Vector3(0f, 0f, 0f);		
+		terrainObject.transform.position = new Vector3(0f, 0f, 0f);
+
+		maxTerrainHeight = maxMapHeight;
 
 		this.noiseGenerator = noiseGenerator;
-		this.chunkDimensions = chunkDimensions;
+		this.chunkDimensions = noiseGenerator.GetDimensions();
 		this.terrainTypes = terrainTypes;
+
+		this.chunkRenderDistance = chunkRenderDistance;
 
 		chunksPerDimension = chunkRenderDistance + (chunkRenderDistance + 1);
 		Debug.Log("Chunks per Dimension : " + chunksPerDimension);
@@ -85,11 +89,6 @@ public class ProceduralTerrain {
 		Debug.Log(terrainsFound + " " + OBJECTTYPENAME + "'s deleted from scene");
 	}
 
-	public void UpdateMap(Vector2 playerPosition)
-	{
-
-	}
-
 	public static Texture2D Generate2DTextureForTerrains(float[,] noiseMap, TerrainType[] terrainArr)
 	{
 		int mapWidth = noiseMap.GetLength(0);
@@ -97,6 +96,7 @@ public class ProceduralTerrain {
 		int numTerrains = terrainArr.Length;
 
 		Texture2D resultTexture = new Texture2D(mapWidth, mapHeight);
+
 		Color[] colorMap = new Color[mapWidth * mapHeight];
 
 		System.Random random = new System.Random (1332);
@@ -108,7 +108,7 @@ public class ProceduralTerrain {
 			{
 				for(int i = 0; i < numTerrains; i++)
 				{
-					if(noiseMap[x,y] <= terrainArr[i].heightCutoff)
+					if(noiseMap[x, y] <= terrainArr[i].heightCutoff)
 					{
 						int numColors = terrainArr[i].terrainColors.Length;
 						Color32 currColor = terrainArr[i].terrainColors[ random.Next(1, 1000) % numColors];
@@ -144,7 +144,7 @@ public class ProceduralTerrain {
 	}
 
 	/* Vector2 playerPosition */
-	public void Render()
+	public void Render(bool useTerrainColors)
 	{
 		if(terrainChunks[0,0] != null)
 			this.Clear();
@@ -155,19 +155,18 @@ public class ProceduralTerrain {
 
 			for(int y = 0; y < chunksPerDimension; y++)
 			{
-				/* Set Noise generation offset to chunkSize * global chunk dimension index */
-				float[,] currentNoiseArray = noiseGenerator.GenerateNoiseArr(chunkDimensions[XVAL] * x, chunkDimensions[YVAL] * y);
+				int relativeY = y - (chunksPerDimension - 1) / 2;
 
-				if(x == 0 && y == 0)
-				{
-					Debug.Assert(currentNoiseArray.GetLength(0) == 50);
-					Debug.Assert(currentNoiseArray.GetLength(1) == 50);
-				}
+				/* Set Noise generation offset to chunkSize * global chunk dimension index */
+				float[,] currentNoiseArray = noiseGenerator.GenerateNoiseArr(relativeX, relativeY);
 
 				Mesh mesh = GenerateMeshFromNoiseMap(currentNoiseArray, maxTerrainHeight, terrainTypes[0].heightCutoff);
-				Texture2D texture = Generate2DTextureForTerrains(currentNoiseArray, terrainTypes);
+				Texture2D texture;
 
-				int relativeY = y - (chunksPerDimension - 1) / 2;
+				if(useTerrainColors)
+					texture = Generate2DTextureForTerrains(currentNoiseArray, terrainTypes);
+				else
+					texture = Texture2DFromNoiseMap(currentNoiseArray);
 
 				terrainChunks[x,y] = new TerrainChunk(	new Vector2(relativeX, relativeY), 
 														new Vector2(currentNoiseArray.GetLength(0), currentNoiseArray.GetLength(1)), 
@@ -191,12 +190,12 @@ public class ProceduralTerrain {
 		{
 			for(int y = 0; y < mapSize; y++)
 			{
-				vertices[x * mapSize + y].x = x * 20;
-
+				vertices[x * mapSize + y].x = x;
 				/* Clamp height at lower bound */
-				vertices[x * mapSize + y].y = (noiseMap[x,y] > minHeightClamp) ? (1 + noiseMap[x,y] * maxHeight) : minHeightClamp * maxHeight;
+				vertices[x * mapSize + y].y = (noiseMap[x,y] > minHeightClamp) ? (noiseMap[x,y] * maxHeight) : minHeightClamp * maxHeight;
+				vertices[x * mapSize + y].z = y;
 
-				vertices[x * mapSize + y].z = y * 20;
+				// Debug.Log("(" + x + "," + y + ") -> " + noiseMap[x,y]);
 
 				normals[x * mapSize + y].x = 0;
 				normals[x * mapSize + y].y = 1;
@@ -226,6 +225,8 @@ public class ProceduralTerrain {
 				uvs[x * mapSize + y].y = y / (float)mapSize;
 			}
 		}
+
+		Debug.Assert(triangles.Length == ((mapSize - 1)) * (mapSize - 1) * 6);
 
 		mesh.vertices = vertices;
 		mesh.triangles = triangles.Reverse().ToArray();

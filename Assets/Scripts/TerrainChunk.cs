@@ -29,7 +29,7 @@ public class TerrainChunk {
 		mesh.RecalculateBounds(); 
 		meshCollider.sharedMesh = mesh;
 
-		chunkObject.transform.position = new Vector3(globalPositionIndex.x * (chunkSize.x - 1) * 20f, 0f, globalPositionIndex.y * (chunkSize.y - 1)* 20f);
+		chunkObject.transform.position = new Vector3(globalPositionIndex.x * (chunkSize.x - 1), 0f, globalPositionIndex.y * (chunkSize.y - 1));
 		chunkObject.transform.parent = parent;
 	}
 

@@ -24,6 +24,7 @@ public class PerlinNoise {
 	public int seededNumberGeneratorMaxVal = DEFAULT_SEEDED_GEN_MAX_VAL;
 	public int seededNumberGeneratorMinVal = DEFAULT_SEEDED_GEN_MIN_VAL;
 
+	private float[] offset;
 	private ILogger logger = Debug.unityLogger;
 	private const string logTag = "TerrainGenerator";
 
@@ -37,7 +38,18 @@ public class PerlinNoise {
 		this.persistance = persistance;
 		this.lacunarity = lacunarity;
 
+		System.Random seededNumberGenerator = new System.Random(seed);
+
+		offset = new float[2];
+		offset[0] = seededNumberGenerator.Next(seededNumberGeneratorMinVal, seededNumberGeneratorMaxVal);
+		offset[1] = seededNumberGenerator.Next(seededNumberGeneratorMinVal, seededNumberGeneratorMaxVal);
+
 		ValidateState();
+	}
+
+	public int[] GetDimensions()
+	{
+		return new int[2]{arrWidth, arrHeight};
 	}
 
 	private static void ValidateInput(int arrWidth, int arrHeight, int seed, float scale, int numOctaves)
@@ -170,14 +182,11 @@ public class PerlinNoise {
 		float maxVal = float.MinValue;
 		float minVal = float.MaxValue;
 
-		/* Setup Psuedo Random Number Generator with given seed */
-		System.Random seededNumberGenerator = new System.Random(seed);
-		Vector2[] octaveOffsets = new Vector2[numOctaves];
-		float[,] noiseArr = new float[arrWidth, arrWidth];
+		// xIndex = 0;
+		// yIndex = 0;
 
-		float[] offset = new float[2];
-		offset[0] = seededNumberGenerator.Next (seededNumberGeneratorMinVal, seededNumberGeneratorMaxVal);
-		offset[1] = seededNumberGenerator.Next (seededNumberGeneratorMinVal, seededNumberGeneratorMaxVal);
+		Vector2[] octaveOffsets = new Vector2[numOctaves];
+		float[,] noiseArr = new float[arrWidth, arrWidth];		
 		
 		for (int i = 0; i < numOctaves; i++) {
 			octaveOffsets[i] = new Vector2 (offset[0], offset[1]);
@@ -195,8 +204,9 @@ public class PerlinNoise {
 				float frequency = 1;
 
 				for (int i = 0; i < numOctaves; i++) {
-					float perlinX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x + (xIndex * arrWidth);
-					float perlinY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y + (yIndex * arrHeight);
+
+					float perlinX = (x + (xIndex * (arrWidth)) - halfWidth) / scale * frequency + octaveOffsets[i].x;
+					float perlinY = (y + (yIndex * (arrHeight)) - halfHeight) / scale * frequency + octaveOffsets[i].y;
 
 					float perlinValue = Mathf.PerlinNoise(perlinX, perlinY);
 					currentVal += perlinValue * amplitude;
