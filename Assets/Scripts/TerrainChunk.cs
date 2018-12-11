@@ -17,7 +17,7 @@ public class TerrainChunk {
 		chunkObject = new GameObject("Terrain Chunk");
 
 		meshRenderer = chunkObject.AddComponent<MeshRenderer>() as MeshRenderer;
-		meshFilter = chunkObject.AddComponent<MeshFilter>() as MeshFiler;
+		meshFilter = chunkObject.AddComponent<MeshFilter>() as MeshFilter;
 		meshCollider = chunkObject.AddComponent<MeshCollider>() as MeshCollider;
 
 		meshRenderer.material.mainTexture = texture;
@@ -28,16 +28,16 @@ public class TerrainChunk {
 		mesh.RecalculateBounds(); 
 		meshCollider.sharedMesh = mesh;
 
-		chunkObject.transform.position = new Vector3(globalPositionIndex.x * chunkSize, 0, globalPositionIndex.y * globalPositionIndex);
+		chunkObject.transform.position = new Vector3(globalPositionIndex.x * (float)chunkSize, 0f, globalPositionIndex.y * (float)chunkSize);
 		chunkObject.transform.parent = parent;
 	}
 
-	public bool isVisable()
+	public bool IsVisable()
 	{
 		return visability;
 	}
 
-	public setVisable(bool isVisable)
+	public void SetVisable(bool isVisable)
 	{
 		visability = isVisable;
 		chunkObject.SetActive(isVisable);
