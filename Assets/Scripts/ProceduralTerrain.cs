@@ -9,7 +9,7 @@ public class ProceduralTerrain {
 	private TerrainChunk[,] terrainChunks;
 	/* 	How many chunks in each distance to render 
 		E.g when 1, will render the players chunk, and 8 others (1 in each direction + diagnals) */
-	private int chunkRenderDistance = 0;
+	private int chunkRenderDistance = 1;
 	private int chunksPerDimension;
 	private PerlinNoise noiseGenerator;
 	private int[] chunkDimensions;
@@ -31,7 +31,7 @@ public class ProceduralTerrain {
 		this.chunkDimensions = chunkDimensions;
 		this.terrainTypes = terrainTypes;
 
-		chunksPerDimension = (int) Math.Floor(Math.Pow(chunkRenderDistance + (chunkRenderDistance + 1), 2));
+		chunksPerDimension = chunkRenderDistance + (chunkRenderDistance + 1);
 		Debug.Log("Chunks per Dimension : " + chunksPerDimension);
 		terrainChunks = new TerrainChunk[chunksPerDimension, chunksPerDimension];
 
@@ -139,7 +139,7 @@ public class ProceduralTerrain {
 		if(terrainTypes != null)
 			this.terrainTypes = terrainTypes;
 
-		chunksPerDimension = (int) Math.Floor(Math.Pow(chunkRenderDistance + (chunkRenderDistance + 1), 2));
+		chunksPerDimension = chunkRenderDistance + (chunkRenderDistance + 1);
 		terrainChunks = new TerrainChunk[chunksPerDimension, chunksPerDimension];
 	}
 
@@ -155,10 +155,19 @@ public class ProceduralTerrain {
 			{
 				/* Set Noise generation offset to chunkSize * global chunk dimension index */
 				float[,] currentNoiseArray = noiseGenerator.GenerateNoiseArr(chunkDimensions[XVAL] * x, chunkDimensions[YVAL] * y);
+
+				if(x == 0 && y == 0)
+				{
+					Debug.Assert(currentNoiseArray.GetLength(0) == 50);
+					Debug.Assert(currentNoiseArray.GetLength(1) == 50);
+				}
+
 				Mesh mesh = GenerateMeshFromNoiseMap(currentNoiseArray, maxTerrainHeight, terrainTypes[0].heightCutoff);
 				Texture2D texture = Generate2DTextureForTerrains(currentNoiseArray, terrainTypes);
 
-				terrainChunks[x,y] = new TerrainChunk(new Vector2(x, y), chunksPerDimension, terrainObject.transform, mesh, texture);
+				terrainChunks[x,y] = new TerrainChunk(	new Vector2(x, y), 
+														new Vector2(currentNoiseArray.GetLength(0), currentNoiseArray.GetLength(1)), 
+														terrainObject.transform, mesh, texture);
 			}
 		}
 	}
